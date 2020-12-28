@@ -1,14 +1,9 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS base
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS base
 WORKDIR /app
 
-ENV apiVersion=v1.0
+COPY . .
+RUN dotnet publish GithubActionsDashboard/GithubActionsDashboard.csproj -c Release -o /app/artifacts/GithubActionsDashboard
 
-LABEL product="threeshape.bat.services.github.app"
-LABEL version="#GitVersion_SemVer"
-LABEL InformationalVersion="#GitVersion_InformationalVersion"
+HEALTHCHECK --retries=5 --interval=10s --timeout=1s CMD curl --fail http://localhost:8080/weatherforecast || exit 1
 
-COPY ./artifacts/threeshape.bat.services.github.app/ /app/
-
-HEALTHCHECK --retries=5 --interval=10s --timeout=1s CMD curl --fail http://localhost/api/${apiVersion}/githubapp || exit 1
-
-ENTRYPOINT ["dotnet", "threeshape.bat.services.github.app.dll"]
+ENTRYPOINT ["dotnet", "/app/artifacts/GithubActionsDashboard/GithubActionsDashboard.dll", "--urls", "http://*:8080"]
